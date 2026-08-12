@@ -1,0 +1,31 @@
+<div class="verify-container">
+  <div class="verify-card">
+    <h1>Two-Factor Verification</h1>
+    <p>Enter the 6-digit code from your authenticator app.</p>
+
+    <form (ngSubmit)="onSubmit()" #verifyForm="ngForm">
+      <div class="form-group">
+        <input
+          type="text"
+          id="code"
+          name="code"
+          [(ngModel)]="twoFactorCode"
+          required
+          minlength="6"
+          maxlength="6"
+          pattern="[0-9]{6}"
+          placeholder="000000"
+          autofocus
+        />
+      </div>
+
+      @if (errorMessage()) {
+        <div class="alert alert-error">{{ errorMessage() }}</div>
+      }
+
+      <button type="submit" [disabled]="verifyForm.invalid || isLoading()">
+        {{ isLoading() ? 'Verifying...' : 'Verify' }}
+      </button>
+    </form>
+  </div>
+</div>

@@ -192,6 +192,11 @@ namespace backend.Controllers
             var user = await _db.AppUsers.FindAsync(userId.Value);
             if (user == null) return Unauthorized();
 
+            if (user.IsTwoFactorEnabled)
+            {
+                return BadRequest(new { message = "Two-factor authentication is already enabled. Disable it first to set up again." });
+            }
+
             var secret = _twoFactorService.GenerateSecret();
             var otpAuthUri = _twoFactorService.BuildOtpAuthUri(secret, user.Username);
             var qrCodeDataUrl = _twoFactorService.GenerateQrCodeDataUrl(otpAuthUri);
@@ -318,6 +323,25 @@ namespace backend.Controllers
             await LogAuditAsync(user.Id, user.Username, "2FA_DISABLED", true);
 
             return Ok(new { message = "Two-factor authentication disabled." });
+        }
+
+        // GET /api/auth/me
+        [HttpGet("me")]
+        [Authorize]
+        public async Task<IActionResult> GetCurrentUserProfile()
+        {
+            var userId = GetCurrentUserId();
+            if (userId == null) return Unauthorized();
+
+            var user = await _db.AppUsers.FindAsync(userId.Value);
+            if (user == null) return Unauthorized();
+
+            return Ok(new
+            {
+                username = user.Username,
+                email = user.Email,
+                isTwoFactorEnabled = user.IsTwoFactorEnabled
+            });
         }
     }
 }

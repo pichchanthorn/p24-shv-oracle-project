@@ -1,0 +1,51 @@
+<div class="setup-container">
+  <div class="setup-card">
+    <h1>Setup Two-Factor Authentication</h1>
+
+    @if (isLoading() && !qrCodeDataUrl()) {
+      <p>Loading QR code...</p>
+    }
+
+    @if (qrCodeDataUrl()) {
+      <div class="qr-section">
+        <p>Scan this QR code with your authenticator app:</p>
+        <img [src]="qrCodeDataUrl()" alt="2FA QR Code" class="qr-image" />
+
+        <p class="secret-label">Or enter this code manually:</p>
+        <code class="secret-code">{{ secret() }}</code>
+      </div>
+
+      <form (ngSubmit)="onEnable()" #enableForm="ngForm">
+        <div class="form-group">
+          <label for="code">Enter 6-digit code</label>
+          <input
+            type="text"
+            id="code"
+            name="code"
+            [(ngModel)]="twoFactorCode"
+            required
+            minlength="6"
+            maxlength="6"
+            pattern="[0-9]{6}"
+          />
+        </div>
+
+        @if (errorMessage()) {
+          <div class="alert alert-error">{{ errorMessage() }}</div>
+        }
+
+        @if (successMessage()) {
+          <div class="alert alert-success">{{ successMessage() }}</div>
+        }
+
+        <button type="submit" [disabled]="enableForm.invalid || isLoading()">
+          {{ isLoading() ? 'Verifying...' : 'Enable 2FA' }}
+        </button>
+      </form>
+    }
+
+    @if (errorMessage() && !qrCodeDataUrl()) {
+      <div class="alert alert-error">{{ errorMessage() }}</div>
+    }
+  </div>
+</div>
