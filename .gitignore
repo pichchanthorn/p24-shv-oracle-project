@@ -3,4 +3,5 @@ obj/
 *.user
 .vs/
 appsettings.Development.json
+backend/backend/appsettings.json
 *.log
