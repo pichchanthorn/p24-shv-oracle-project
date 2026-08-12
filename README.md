@@ -1,7 +1,10 @@
-​
 # P24 SHV Oracle Project
 
-Authentication API backend built with ASP.NET Core, Entity Framework Core, and Oracle Database.
+![.NET](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white)
+![Angular](https://img.shields.io/badge/Angular-21-DD0031?logo=angular&logoColor=white)
+![Build](https://img.shields.io/badge/build-not_configured-lightgrey)
+
+A full-stack authentication system built as a university course project: an ASP.NET Core Web API backend with JWT and TOTP-based two-factor authentication, backed by Oracle Database, and an Angular client.
 
 ## Features
 
@@ -24,6 +27,29 @@ Authentication API backend built with ASP.NET Core, Entity Framework Core, and O
 | Two-Factor Auth | TOTP via `Otp.NET` |
 | QR Code Generation | `QRCoder` |
 
+## Frontend
+
+The `frontend/` directory contains an Angular 21 single-page application that consumes the backend API.
+
+| Area | Technology |
+|---|---|
+| Framework | Angular 21 (standalone components) |
+| HTTP | Angular `HttpClient` with a bearer-token interceptor |
+| Language | TypeScript 5.9 |
+| Package Manager | npm |
+
+### Pages / Routes
+
+| Route | Component | Description |
+|---|---|---|
+| `/login` | `Login` | Username/password sign-in |
+| `/register` | `Register` | New user registration |
+| `/dashboard` | `Dashboard` | Authenticated landing page, shows 2FA status |
+| `/two-factor-setup` | `TwoFactorSetup` | QR code enrollment for TOTP 2FA |
+| `/two-factor-verify` | `TwoFactorVerify` | 2FA challenge during login |
+
+`auth.interceptor.ts` attaches the JWT access token to outgoing requests. The API base URL is currently hardcoded in `src/app/services/auth.ts` (`https://localhost:7195/api/auth`) for local development against the backend's `https` launch profile. The backend's CORS policy allows `http://localhost:4200`, the default `ng serve` origin.
+
 ## Project Structure
 
 ```
@@ -43,6 +69,21 @@ backend/
     │   └── TwoFactorService.cs
     ├── Program.cs
     └── appsettings.json
+
+frontend/
+└── src/
+    └── app/
+        ├── pages/
+        │   ├── dashboard/
+        │   ├── login/
+        │   ├── register/
+        │   ├── two-factor-setup/
+        │   └── two-factor-verify/
+        ├── services/
+        │   ├── auth.ts
+        │   └── auth.interceptor.ts
+        ├── app.config.ts
+        └── app.routes.ts
 ```
 
 ## Getting Started
@@ -50,10 +91,11 @@ backend/
 ### Prerequisites
 
 - .NET 10 SDK
+- Node.js and npm (for the Angular frontend)
 - Oracle Database (Docker or standalone)
 - `dotnet-ef` CLI tool
 
-### Setup
+### Backend Setup
 
 ```bash
 cd backend/backend
@@ -65,6 +107,18 @@ dotnet ef database update
 dotnet run --launch-profile https
 ```
 
+The API listens on `https://localhost:7195` (and `http://localhost:5123`) by default.
+
+### Frontend Setup
+
+```bash
+cd frontend
+npm install
+ng serve
+```
+
+The app is served at `http://localhost:4200` and expects the backend to be running at `https://localhost:7195`.
+
 ## API Endpoints
 
 | Method | Route | Auth | Description |
@@ -75,6 +129,13 @@ dotnet run --launch-profile https
 | POST | `/api/auth/2fa/enable` | Bearer token | Confirm and enable 2FA |
 | POST | `/api/auth/2fa/verify-login` | Challenge token | Complete 2FA login |
 | POST | `/api/auth/2fa/disable` | Bearer token | Disable 2FA |
+
+## Security Notes
+
+- Passwords are never stored in plaintext — they are hashed using ASP.NET Core's `PasswordHasher<TUser>`.
+- 2FA (TOTP) secrets are stored server-side and are never exposed to the client after initial setup.
+- JWT signing keys and database connection strings must never be committed to source control. Use `dotnet user-secrets` for local development and environment variables (or a secrets manager) in other environments.
+- `backend/backend/appsettings.json` is excluded from version control via `.gitignore`; configure secrets locally with `dotnet user-secrets` instead of editing that file directly.
 
 ## Author
 
