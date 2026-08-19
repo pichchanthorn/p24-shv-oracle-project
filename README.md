@@ -63,12 +63,20 @@ backend/
     ├── Migrations/
     ├── Models/
     │   ├── Data/
+    │   │   ├── AppUser.cs
+    │   │   ├── AuthAuditLog.cs
+    │   │   └── Student.cs
     │   └── Request/
+    │       └── AuthDtos.cs
     ├── Services/
     │   ├── JwtService.cs
     │   └── TwoFactorService.cs
+    ├── Properties/
+    │   └── launchSettings.json
+    ├── Dockerfile
     ├── Program.cs
-    └── appsettings.json
+    ├── appsettings.json
+    └── backend.csproj
 
 frontend/
 └── src/
@@ -84,6 +92,9 @@ frontend/
         │   └── auth.interceptor.ts
         ├── app.config.ts
         └── app.routes.ts
+
+docs/
+└── BACKEND_DEVELOPMENT_MANUAL.md
 ```
 
 ## Getting Started
@@ -136,6 +147,17 @@ The app is served at `http://localhost:4200` and expects the backend to be runni
 - 2FA (TOTP) secrets are stored server-side and are never exposed to the client after initial setup.
 - JWT signing keys and database connection strings must never be committed to source control. Use `dotnet user-secrets` for local development and environment variables (or a secrets manager) in other environments.
 - `backend/backend/appsettings.json` is excluded from version control via `.gitignore`; configure secrets locally with `dotnet user-secrets` instead of editing that file directly.
+- Dependencies are regularly checked for known vulnerabilities with `dotnet list package --vulnerable --include-transitive`.
+
+## Known Limitations / Roadmap
+
+This project is under active development for a university course. The following items are tracked and planned before the codebase would be considered production-ready:
+
+- [ ] Encrypt TOTP secrets at rest (currently stored as readable text in the database)
+- [ ] Add automated unit and integration tests
+- [ ] Add API rate limiting in addition to per-user lockout
+- [ ] Add centralized exception handling and consistent error responses
+- [ ] Add health/readiness endpoints, including an Oracle dependency check
 
 ## Author
 
