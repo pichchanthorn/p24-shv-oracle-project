@@ -64,4 +64,11 @@ namespace backend.Models.Request
         [StringLength(6, MinimumLength = 6)]
         public string TwoFactorCode { get; set; } = string.Empty;
     }
+
+    public class UserProfileResponse
+    {
+        public string Username { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public bool IsTwoFactorEnabled { get; set; }
+    }
 }

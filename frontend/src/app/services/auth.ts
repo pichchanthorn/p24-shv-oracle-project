@@ -37,16 +37,37 @@ export interface UserProfile {
   isTwoFactorEnabled: boolean;
 }
 
+const ACCESS_TOKEN_STORAGE_KEY = 'access_token';
+
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly apiBaseUrl = 'https://localhost:7195/api/auth';
+  readonly apiBaseUrl = 'https://localhost:7195/api/auth';
 
-  // Signal to track current access token (in-memory only)
-  accessToken = signal<string | null>(null);
+  // Access token is persisted in sessionStorage (cleared when the tab
+  // closes) so a page refresh doesn't force the user to log in again.
+  // Nothing else — no password, no TOTP secret — is ever stored client-side.
+  accessToken = signal<string | null>(this.readStoredToken());
 
   constructor(private http: HttpClient) {}
+
+  private readStoredToken(): string | null {
+    try {
+      return sessionStorage.getItem(ACCESS_TOKEN_STORAGE_KEY);
+    } catch {
+      return null;
+    }
+  }
+
+  private saveAccessToken(token: string): void {
+    this.accessToken.set(token);
+    try {
+      sessionStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, token);
+    } catch {
+      // sessionStorage unavailable (e.g. private browsing) — token stays in-memory only.
+    }
+  }
 
   register(request: RegisterRequest): Observable<{ message: string }> {
     return this.http.post<{ message: string }>(`${this.apiBaseUrl}/register`, request);
@@ -56,7 +77,7 @@ export class AuthService {
     return this.http.post<LoginResponse>(`${this.apiBaseUrl}/login`, request).pipe(
       tap(response => {
         if (!response.requiresTwoFactor && response.accessToken) {
-          this.accessToken.set(response.accessToken);
+          this.saveAccessToken(response.accessToken);
         }
       })
     );
@@ -74,7 +95,7 @@ export class AuthService {
     return this.http.post<LoginResponse>(`${this.apiBaseUrl}/2fa/verify-login`, request).pipe(
       tap(response => {
         if (response.accessToken) {
-          this.accessToken.set(response.accessToken);
+          this.saveAccessToken(response.accessToken);
         }
       })
     );
@@ -90,6 +111,11 @@ export class AuthService {
 
   logout(): void {
     this.accessToken.set(null);
+    try {
+      sessionStorage.removeItem(ACCESS_TOKEN_STORAGE_KEY);
+    } catch {
+      // Nothing to clean up if sessionStorage isn't available.
+    }
   }
 
   isLoggedIn(): boolean {

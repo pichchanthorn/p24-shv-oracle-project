@@ -35,6 +35,7 @@ builder.Services.AddScoped<IPasswordHasher<AppUser>, PasswordHasher<AppUser>>();
 // Custom services
 builder.Services.AddSingleton<JwtService>();
 builder.Services.AddSingleton<TwoFactorService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 // JWT Authentication
 builder.Services.AddAuthentication(options =>
@@ -54,6 +55,23 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
         ValidateLifetime = true,
         ClockSkew = TimeSpan.FromSeconds(30)
+    };
+
+    // Security boundary: a 2fa-challenge token must never be usable as a normal
+    // access token. This is enforced here, at the authentication pipeline level,
+    // so every [Authorize] endpoint is protected regardless of the token's
+    // signature/issuer/audience/expiry all being otherwise valid.
+    options.Events = new JwtBearerEvents
+    {
+        OnTokenValidated = context =>
+        {
+            var tokenType = context.Principal?.FindFirst("token_type")?.Value;
+            if (tokenType != "access")
+            {
+                context.Fail("Token type is not valid for this endpoint.");
+            }
+            return Task.CompletedTask;
+        }
     };
 });
 
@@ -88,3 +106,5 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+public partial class Program { }
