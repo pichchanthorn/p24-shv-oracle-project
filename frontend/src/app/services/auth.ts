@@ -43,7 +43,7 @@ const ACCESS_TOKEN_STORAGE_KEY = 'access_token';
   providedIn: 'root'
 })
 export class AuthService {
-  readonly apiBaseUrl = 'https://localhost:7195/api/auth';
+  readonly apiBaseUrl = 'http://localhost:5123/api/auth';
 
   // Access token is persisted in sessionStorage (cleared when the tab
   // closes) so a page refresh doesn't force the user to log in again.
